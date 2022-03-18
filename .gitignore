@@ -1,3 +1,9 @@
 /Makefile
 /objs/
 /tmp/
+.idea/
+.vscode/
+objs/
+cmake-build-debug/
+3rd/balus
+src/3rd
