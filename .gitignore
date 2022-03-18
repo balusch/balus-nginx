@@ -4,3 +4,5 @@ objs/
 cmake-build-debug/
 3rd/balus
 src/3rd
+compile_commands.json
+Makefile
