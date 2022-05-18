@@ -17,11 +17,11 @@
     --with-stream_realip_module                                               \
     --add-module=./3rd/lua-nginx-module                                       \
     --add-module=./3rd/njs/nginx                                              \
-    --with-pcre=/Users/balus/Desktop/Workspace/iInstall/pcre-8.44             \
+    --with-pcre=/Users/balus/Workspace/iInstall/pcre2-10.39                   \
     --with-pcre-jit                                                           \
-    --with-openssl=/Users/balus/Desktop/Workspace/iInstall/openssl-1.1.1n
+    --with-openssl=/Users/balus/Workspace/iInstall/openssl-1.1.1n
 
-    #--with-pcre=/Users/balus/Desktop/Workspace/iInstall/pcre2-10.39           \
+    # --with-pcre=/Users/balus/Workspace/iInstall/pcre-8.44             \
 
 if [ $? -eq 0 ]; then
   echo "CONFIGURE SUCCEEDED!"
