@@ -1841,6 +1841,7 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u,
     ngx_connection_t *c)
 {
     u_char     *p, *last;
+    in_addr_t   addr;
     ngx_str_t   name;
 
     if (u->conf->ssl_name) {
@@ -1890,7 +1891,7 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u,
         goto done;
     }
 
-    if (ngx_inet_addr(name.data, name.len) != INADDR_NONE) {
+    if (ngx_inet_addr(name.data, name.len, &addr) != NGX_OK) {
         goto done;
     }
 

@@ -676,6 +676,7 @@ ngx_http_geo_range(ngx_conf_t *cf, ngx_http_geo_conf_ctx_t *ctx,
     u_char      *p, *last;
     in_addr_t    start, end;
     ngx_str_t   *net;
+    ngx_int_t    rc;
     ngx_uint_t   del;
 
     if (ngx_strcmp(value[0].data, "default") == 0) {
@@ -729,9 +730,9 @@ ngx_http_geo_range(ngx_conf_t *cf, ngx_http_geo_conf_ctx_t *ctx,
         goto invalid;
     }
 
-    start = ngx_inet_addr(net->data, p - net->data);
+    rc = ngx_inet_addr(net->data, p - net->data, &start);
 
-    if (start == INADDR_NONE) {
+    if (rc != NGX_OK) {
         goto invalid;
     }
 
@@ -739,9 +740,9 @@ ngx_http_geo_range(ngx_conf_t *cf, ngx_http_geo_conf_ctx_t *ctx,
 
     p++;
 
-    end = ngx_inet_addr(p, last - p);
+    rc = ngx_inet_addr(p, last - p, &end);
 
-    if (end == INADDR_NONE) {
+    if (rc != NGX_OK) {
         goto invalid;
     }
 
