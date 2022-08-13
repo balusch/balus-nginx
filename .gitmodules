@@ -7,3 +7,6 @@
 [submodule "3rd/njs"]
 	path = 3rd/njs
 	url = https://github.com/nginx/njs.git
+[submodule "3rd/unit"]
+	path = 3rd/unit
+	url = https://github.com/nginx/unit.git
