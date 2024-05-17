@@ -393,13 +393,14 @@ ngx_resolver_cleanup_tree(ngx_resolver_t *r, ngx_rbtree_t *tree)
 ngx_resolver_ctx_t *
 ngx_resolve_start(ngx_resolver_t *r, ngx_resolver_ctx_t *temp)
 {
+    ngx_int_t            rc;
     in_addr_t            addr;
     ngx_resolver_ctx_t  *ctx;
 
     if (temp) {
-        addr = ngx_inet_addr(temp->name.data, temp->name.len);
+        rc = ngx_inet_addr(temp->name.data, temp->name.len, &addr);
 
-        if (addr != INADDR_NONE) {
+        if (rc == NGX_OK) {
             temp->resolver = r;
             temp->state = NGX_OK;
             temp->naddrs = 1;
