@@ -16,8 +16,8 @@ static ngx_int_t ngx_inet_add_addr(ngx_pool_t *pool, ngx_url_t *u,
     struct sockaddr *sockaddr, socklen_t socklen, ngx_uint_t total);
 
 
-in_addr_t
-ngx_inet_addr(u_char *text, size_t len)
+ngx_int_t
+ngx_inet_addr(u_char *text, size_t len, in_addr_t *addrp)
 {
     u_char      *p, c;
     in_addr_t    addr;
@@ -34,7 +34,7 @@ ngx_inet_addr(u_char *text, size_t len)
             octet = octet * 10 + (c - '0');
 
             if (octet > 255) {
-                return INADDR_NONE;
+                return NGX_ERROR;
             }
 
             continue;
@@ -47,15 +47,16 @@ ngx_inet_addr(u_char *text, size_t len)
             continue;
         }
 
-        return INADDR_NONE;
+        return NGX_ERROR;
     }
 
     if (n == 3) {
         addr = (addr << 8) + octet;
-        return htonl(addr);
+        *addrp = htonl(addr);
+        return NGX_OK;
     }
 
-    return INADDR_NONE;
+    return NGX_ERROR;
 }
 
 
@@ -66,6 +67,8 @@ ngx_inet6_addr(u_char *p, size_t len, u_char *addr)
 {
     u_char      c, *zero, *digit, *s, *d;
     size_t      len4;
+    in_addr_t   addr4;
+    ngx_int_t   rc;
     ngx_uint_t  n, nibbles, word;
 
     if (len == 0) {
@@ -117,12 +120,12 @@ ngx_inet6_addr(u_char *p, size_t len, u_char *addr)
                 return NGX_ERROR;
             }
 
-            word = ngx_inet_addr(digit, len4 - 1);
-            if (word == INADDR_NONE) {
+            rc = ngx_inet_addr(digit, len4 - 1, &addr4);
+            if (rc != NGX_OK) {
                 return NGX_ERROR;
             }
 
-            word = ntohl(word);
+            word = ntohl(addr4);
             *addr++ = (u_char) ((word >> 24) & 0xff);
             *addr++ = (u_char) ((word >> 16) & 0xff);
             n--;
@@ -388,9 +391,9 @@ ngx_ptocidr(ngx_str_t *text, ngx_cidr_t *cidr)
     mask = ngx_strlchr(addr, last, '/');
     len = (mask ? mask : last) - addr;
 
-    cidr->u.in.addr = ngx_inet_addr(addr, len);
+    rc = ngx_inet_addr(addr, len, &cidr->u.in.addr);
 
-    if (cidr->u.in.addr != INADDR_NONE) {
+    if (rc == NGX_OK) {
         cidr->family = AF_INET;
 
         if (mask == NULL) {
@@ -562,6 +565,7 @@ ngx_int_t
 ngx_parse_addr(ngx_pool_t *pool, ngx_addr_t *addr, u_char *text, size_t len)
 {
     in_addr_t             inaddr;
+    ngx_int_t             rc;
     ngx_uint_t            family;
     struct sockaddr_in   *sin;
 #if (NGX_HAVE_INET6)
@@ -575,9 +579,9 @@ ngx_parse_addr(ngx_pool_t *pool, ngx_addr_t *addr, u_char *text, size_t len)
     ngx_memzero(&inaddr6, sizeof(struct in6_addr));
 #endif
 
-    inaddr = ngx_inet_addr(text, len);
+    rc = ngx_inet_addr(text, len, &inaddr);
 
-    if (inaddr != INADDR_NONE) {
+    if (rc == NGX_OK) {
         family = AF_INET;
         len = sizeof(struct sockaddr_in);
 
@@ -788,7 +792,7 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 {
     u_char              *host, *port, *last, *uri, *args, *dash;
     size_t               len;
-    ngx_int_t            n;
+    ngx_int_t            n, rc;
     struct sockaddr_in  *sin;
 
     u->socklen = sizeof(struct sockaddr_in);
@@ -961,9 +965,9 @@ no_port:
         return ngx_inet_add_addr(pool, u, &u->sockaddr.sockaddr, u->socklen, 1);
     }
 
-    sin->sin_addr.s_addr = ngx_inet_addr(host, len);
+    rc = ngx_inet_addr(host, len, &sin->sin_addr.s_addr);
 
-    if (sin->sin_addr.s_addr != INADDR_NONE) {
+    if (rc == NGX_OK) {
 
         if (sin->sin_addr.s_addr == INADDR_ANY) {
             u->wildcard = 1;
@@ -1202,6 +1206,7 @@ ngx_int_t
 ngx_inet_resolve_host(ngx_pool_t *pool, ngx_url_t *u)
 {
     u_char              *host;
+    ngx_int_t            rc,
     ngx_uint_t           i, n;
     struct hostent      *h;
     struct sockaddr_in   sin;
@@ -1211,9 +1216,9 @@ ngx_inet_resolve_host(ngx_pool_t *pool, ngx_url_t *u)
     ngx_memzero(&sin, sizeof(struct sockaddr_in));
 
     sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = ngx_inet_addr(u->host.data, u->host.len);
+    rc = ngx_inet_addr(u->host.data, u->host.len, sin.sin_addr.s_addr);
 
-    if (sin.sin_addr.s_addr == INADDR_NONE) {
+    if (rc == NGX_OK) {
         host = ngx_alloc(u->host.len + 1, pool->log);
         if (host == NULL) {
             return NGX_ERROR;
